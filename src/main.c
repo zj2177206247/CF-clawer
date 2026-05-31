@@ -365,21 +365,30 @@ static void print_user_detail(User *u) {
 
     printf("<h3 style='margin-top:20px;'>比赛记录（按时间由近到远）</h3>\n");
     printf("<div style='overflow-x:auto;'>\n");
-    printf("<table style='width:100%%; border-collapse:collapse; min-width:700px;'>\n");
+    printf("<table style='width:100%%; border-collapse:collapse; min-width:800px;'>\n");
     printf("<tr style='background:#3498db; color:#fff;'>"
            "<th style='padding:12px 8px;'>赛事名称</th><th style='padding:12px 8px;'>时间</th>"
            "<th style='padding:12px 8px;'>赛前分</th><th style='padding:12px 8px;'>赛后分</th>"
+           "<th style='padding:12px 8px;'>变化分</th>"          // 新增列标题
            "<th style='padding:12px 8px;'>排名</th><th style='padding:12px 8px;'>通过题目</th>"
            "<th style='padding:12px 8px;'>赛后补题</th></tr>\n");
+
     for (int i = 0; i < u->contest_count; i++) {
         ContestRecord *c = &u->contests[i];
+        int delta = c->new_rating - c->old_rating;        // 计算变化分
+        const char *delta_color = (delta > 0) ? "#27ae60" : ((delta < 0) ? "#e74c3c" : "#000");
+        char delta_sign = (delta > 0) ? '+' : ' ';
         char time_str[32];
         strftime(time_str, sizeof(time_str), "%Y-%m-%d %H:%M", localtime(&c->time));
+
         printf("<tr style='border-bottom:1px solid #ddd; text-align:center;'>");
         printf("<td style='padding:10px 6px;'>%s</td>", c->name);
         printf("<td style='padding:10px 6px;'>%s</td>", time_str);
         printf("<td style='padding:10px 6px; color:%s;'>%d</td>", get_rating_color(c->old_rating), c->old_rating);
         printf("<td style='padding:10px 6px; color:%s;'>%d</td>", get_rating_color(c->new_rating), c->new_rating);
+        // 变化分列，带符号和颜色
+        printf("<td style='padding:10px 6px; color:%s; font-weight:bold;'>%c%d</td>",
+               delta_color, delta_sign, delta);
         printf("<td style='padding:10px 6px;'>%d</td>", c->rank);
         printf("<td style='padding:10px 6px;'>");
         if (c->solved_count == 0) {
@@ -445,7 +454,6 @@ static void print_page_script(void) {
     printf("  var userDiv = document.getElementById(id);\n");
     printf("  if (userDiv) {\n");
     printf("    userDiv.style.display = 'block';\n");
-    printf("    // resize all echarts inside this detail\n");
     printf("    var charts = userDiv.querySelectorAll('[id^=\"histogram_\"]');\n");
     printf("    for (var j = 0; j < charts.length; j++) {\n");
     printf("      var instance = echarts.getInstanceByDom(charts[j]);\n");
